@@ -37,6 +37,7 @@ class doc_vec:
         if os.path.isfile("vec_data.json"):
             f = open("vec_data.json", "r")
             data = pickle.load(f)
+            self.raw_data = data
             f.close()
         else:
             data = pd.read_json("Complied_data.json")
@@ -48,6 +49,13 @@ class doc_vec:
         for d in data:
             self.dataset.add(d)
 
+
+    def get_closest_faiss(self, word):
+        w = self.model.infer_vector([word])
+        return self.dataset.search(w, 10)
+
+    def get_raw_id(self, id):
+        return self.raw_data[id]
 
 
 
