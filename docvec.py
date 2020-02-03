@@ -4,6 +4,7 @@ import pandas as pd
 import os.path
 import numpy as np
 import pickle
+import spacy
 
 class doc_vec:
 
@@ -33,26 +34,27 @@ class doc_vec:
 
     def generate_faiss(self):
         import faiss
+        nlp = spacy.load("en_core_web_lg")
         self.dataset = faiss.IndexFlatL2(100)
         if os.path.isfile("vec_data.json"):
-            f = open("vec_data.json", "r")
+            f = open("vec_data.json", "rb")
             data = pickle.load(f)
-            self.raw_data = data
             f.close()
         else:
-            data = pd.read_json("Complied_data.json")
-            data = [f.strip().split(" ") for f in data["Title"]]
-            data = [self.model.infer_vector(title) for title in data]
-            f = open("vec_data.json", "w")
+            data = pd.read_json("Complied_data.json",orient="split")
+            data = [f.strip() for f in data["Title"]]
+            #data = [self.model.infer_vector(title) for title in data]
+            data = [nlp(title) for title in data]
+            f = open("vec_data.json", "wb")
             pickle.dump(data, f)
             f.close()
-        for d in data:
-            self.dataset.add(d)
+        self.dataset.add(np.array(data))
 
 
     def get_closest_faiss(self, word):
         w = self.model.infer_vector([word])
-        return self.dataset.search(w, 10)
+        print(w)
+        return self.dataset.search(np.array([w]), 10)
 
     def get_raw_id(self, id):
         return self.raw_data[id]
