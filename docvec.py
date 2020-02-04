@@ -35,20 +35,29 @@ class doc_vec:
     def generate_faiss(self):
         import faiss
         nlp = spacy.load("en_core_web_lg")
-        self.dataset = faiss.IndexFlatL2(100)
+        self.dataset = faiss.IndexFlatL2(300)
         if os.path.isfile("vec_data.json"):
+            print("Starting to load data")
             f = open("vec_data.json", "rb")
-            data = pickle.load(f)
+            self.data = pickle.load(f)
             f.close()
+            print("Loaded the data")
         else:
-            data = pd.read_json("Complied_data.json",orient="split")
-            data = [f.strip() for f in data["Title"]]
+            print("Loading raw data")
+            self.data = pd.read_json("Complied_data.json",orient="split")
+            print("Getting title")
+            self.data = [f.strip() for f in self.data["Title"]]
+            self.data = self.data[:50_000]
             #data = [self.model.infer_vector(title) for title in data]
-            data = [nlp(title) for title in data]
+            print("Getting word vectors")
+            self.data = [nlp(title).vector for title in self.data]
+            print("Saving data")
             f = open("vec_data.json", "wb")
-            pickle.dump(data, f)
+            pickle.dump(self.data, f)
             f.close()
-        self.dataset.add(np.array(data))
+        print("Creating dataset")
+        self.dataset.add(np.array(self.data))
+        print("Finished creating the dataset")
 
 
     def get_closest_faiss(self, word):
