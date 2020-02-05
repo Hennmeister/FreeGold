@@ -31,7 +31,7 @@ class doc_vec:
         self.model.save("doc2vec.model")
 
     def evaluate(self, title):
-        return np.array(self.nlp(title.vector))
+        return np.array(self.nlp(title).title)
 
     def load_data(self):
         if os.path.isfile("vec_data.json"):
