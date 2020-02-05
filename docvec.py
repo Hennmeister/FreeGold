@@ -13,7 +13,7 @@ class doc_vec:
         #    self.load_model()
         #else:
         #    self.train_model()
-        pass
+        self.nlp = spacy.load("en_core_web_lg")
 
 
     def load_model(self):
@@ -33,10 +33,7 @@ class doc_vec:
     def evaluate(self, title):
         return np.array(self.nlp(title.vector))
 
-    def generate_faiss(self):
-        import faiss
-        self.nlp = spacy.load("en_core_web_lg")
-        self.dataset = faiss.IndexFlatL2(300)
+    def load_data(self):
         if os.path.isfile("vec_data.json"):
             print("Starting to load data")
             f = open("vec_data.json", "rb")
@@ -56,6 +53,11 @@ class doc_vec:
             f = open("vec_data.json", "wb")
             pickle.dump(self.data, f)
             f.close()
+
+    def generate_faiss(self):
+        import faiss
+        self.dataset = faiss.IndexFlatL2(300)
+        self.load_data()
         print("Creating dataset")
         self.dataset.add(np.array(self.data))
         print("Finished creating the dataset")
@@ -73,13 +75,3 @@ if __name__ == "__main__":
     v.generate_faiss()
     print(v.evaluate("Hey Test!"))
     print(v.evaluate("Hey Test!").shape)
-    # while True:
-    #     test = input().split(" ")
-    #     inferred_vector = model.infer_vector(test)
-    #     sims = model.docvecs.most_similar([inferred_vector], topn=10)
-    #     print(sims)
-    #     # Compare and print the most/median/least similar documents from the train corpus
-    #     print('Test Document ({}): «{}»\n'.format(1, ' '.join(test)))
-    #     print(u'SIMILAR/DISSIMILAR DOCS PER MODEL %s:\n' % model)
-    #     for label, index in [('MOST', 0), ('MEDIAN', len(sims)//2), ('LEAST', len(sims) - 1)]:
-    #         print(u'%s %s: «%s»\n' % (label, sims[index], ' '.join(train_text[sims[index][0]].words)))
