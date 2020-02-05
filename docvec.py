@@ -9,10 +9,11 @@ import spacy
 class doc_vec:
 
     def __init__(self):
-        if os.path.isfile("doc2vec.model"):
-            self.load_model()
-        else:
-            self.train_model()
+        #if os.path.isfile("doc2vec.model"):
+        #    self.load_model()
+        #else:
+        #    self.train_model()
+        pass
 
 
     def load_model(self):
@@ -30,11 +31,11 @@ class doc_vec:
         self.model.save("doc2vec.model")
 
     def evaluate(self, title):
-        return np.array(self.model.infer_vector([title]))
+        return np.array(self.nlp(title.vector))
 
     def generate_faiss(self):
         import faiss
-        nlp = spacy.load("en_core_web_lg")
+        self.nlp = spacy.load("en_core_web_lg")
         self.dataset = faiss.IndexFlatL2(300)
         if os.path.isfile("vec_data.json"):
             print("Starting to load data")
@@ -50,7 +51,7 @@ class doc_vec:
             self.data = self.data[:50_000]
             #data = [self.model.infer_vector(title) for title in data]
             print("Getting word vectors")
-            self.data = [nlp(title).vector for title in self.data]
+            self.data = [self.nlp(title).vector for title in self.data]
             print("Saving data")
             f = open("vec_data.json", "wb")
             pickle.dump(self.data, f)
@@ -61,19 +62,17 @@ class doc_vec:
 
 
     def get_closest_faiss(self, word):
-        w = self.model.infer_vector([word])
+        w = self.nlp(word).vector
         print(w)
-        return self.dataset.search(np.array([w]), 10)
-
-    def get_raw_id(self, id):
-        return self.raw_data[id]
+        return self.dataset.search(np.array(w), 10)
 
 
 
 if __name__ == "__main__":
     v = doc_vec()
-    print(v.evaluate("Test"))
-    print(v.evaluate("Test").shape)
+    v.generate_faiss()
+    print(v.evaluate("Hey Test!"))
+    print(v.evaluate("Hey Test!").shape)
     # while True:
     #     test = input().split(" ")
     #     inferred_vector = model.infer_vector(test)
